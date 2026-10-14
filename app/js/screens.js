@@ -10,10 +10,19 @@ var Screens = (function () {
   /* ---------- 공통 조각 ---------- */
   /* 서비스 이름과 대표 문구 (첫 화면 맨 위) */
   function brand() {
-    return '<div style="background:var(--navy);color:#fff;padding:18px 20px 16px;display:flex;flex-direction:column;gap:4px">' +
-      '<span style="display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;letter-spacing:-0.5px">' +
-        '<img src="assets/logo/symbol-white.svg" alt="" width="30" height="30">손들면</span>' +
-      '<span style="font-size:13px;color:#C9D3F0">대출, 이제 은행이 먼저 찾아옵니다.</span></div>';
+    return '<div class="brand">' +
+      '<span class="brand-name"><img src="assets/logo/symbol-white.svg" alt="" width="30" height="30">손들면</span>' +
+      '<span class="brand-line">대출, 이제 은행이 먼저 찾아옵니다.</span>' +
+      // 넓은 화면(컴퓨터)에서만 보이는 소개 (휴대폰에서는 숨김)
+      '<div class="brand-more">' +
+        '<p class="brand-big">원하는 대출 조건만 올리세요.<br>은행 직원이 <b>먼저</b> 제안해 드려요.</p>' +
+        '<ol class="brand-steps">' +
+          '<li><b>조건 올리기</b><span>금액·기간·지역만. 이름 없이 게시돼요.</span></li>' +
+          '<li><b>제안 받기</b><span>재직 인증된 직원의 제안이 도착 순서대로 와요.</span></li>' +
+          '<li><b>지점에서 상담</b><span>고른 직원과 대화하고 지점을 방문해요.</span></li>' +
+        '</ol>' +
+        '<p class="brand-safe">연락처는 내가 고른 직원에게만 · 서류·선입금 요구 없음 · 이용료 무료</p>' +
+      '</div></div>';
   }
 
   function head(opts) {
@@ -22,18 +31,21 @@ var Screens = (function () {
         (opts.back ? '<button class="back" data-act="go" data-to="' + opts.back + '" aria-label="뒤로">' + I('back', 22) + '</button>' : '') +
         '<div style="display:flex;flex-direction:column;gap:6px;flex:1">' +
           (opts.kicker ? '<div class="kicker">' + opts.kicker + '</div>' : '') +
-          '<h1>' + opts.title + '</h1>' +
+          '<h1>' + opts.title.replace(/<br>/g, '<br class="mbr"> ') + '</h1>' +
           (opts.sub ? '<p class="sub">' + opts.sub + '</p>' : '') +
         '</div>' +
       '</div></header>';
   }
 
-  function tabs(active) {
+  /* deskOnly=true: 휴대폰에서는 숨기고 컴퓨터 화면의 위쪽 메뉴로만 보여 줌 (입력·대화 화면용) */
+  function tabs(active, deskOnly) {
     var u = Store.me();
     var items = u.role === 'banker'
       ? [['board', '수요자 게시판', 'list'], ['my-offers', '보낸 제안', 'send'], ['threads', '대화', 'chat'], ['me', '내 정보', 'user']]
       : [['home', '내 요청', 'home'], ['offers', '제안 게시판', 'list'], ['threads', '대화', 'chat'], ['me', '내 정보', 'user']];
-    return '<nav class="tabs" aria-label="주요 메뉴">' + items.map(function (t) {
+    return '<nav class="tabs' + (deskOnly ? ' desk-only' : '') + '" aria-label="주요 메뉴">' +
+      '<button class="tabs-brand" data-act="go" data-to="#/" aria-label="손들면 처음으로"><img src="assets/logo/symbol-navy.svg" alt="" width="26" height="26">손들면</button>' +
+      items.map(function (t) {
       return '<button data-act="go" data-to="#/' + t[0] + '" class="' + (active === t[0] ? 'on' : '') + '"' +
         (active === t[0] ? ' aria-current="page"' : '') + '>' + I(t[2], 22) + t[1] + '</button>';
     }).join('') + '</nav>';
@@ -137,7 +149,7 @@ var Screens = (function () {
         '<span style="display:flex;flex-direction:column;gap:2px"><span class="title">' + t + '</span><span class="meta" style="font-size:13px;color:var(--ink-2)">' + d + '</span></span>' +
         '</button>';
     }
-    return '<div class="phone">' +
+    return '<div class="phone auth">' +
       brand() + head({ kicker: '회원가입', title: '어떤 목적으로<br>이용하시나요?', sub: '조건을 올리면 여러 금융사 직원이 맞는 상품을 제안해요.' }) +
       '<form class="body" data-form="signup" novalidate>' +
         roleCard('borrower', 'user', '대출이 필요해요', '조건을 올리고 직원의 제안을 받아요') +
@@ -167,7 +179,7 @@ var Screens = (function () {
     var sent = !!state.otpEmail;
     // 스토어 심사용: 운영자가 만든 심사 계정만 비밀번호로 로그인 (일반 이용자는 쓰지 않음)
     if (state.pwLogin) {
-      return '<div class="phone">' + brand() + head({ kicker: '심사용 로그인', title: '심사 계정으로<br>로그인', sub: '앱 심사를 위해 운영자가 발급한 계정 전용이에요.' }) +
+      return '<div class="phone auth">' + brand() + head({ kicker: '심사용 로그인', title: '심사 계정으로<br>로그인', sub: '앱 심사를 위해 운영자가 발급한 계정 전용이에요.' }) +
         '<form class="body" data-form="pw-login" novalidate>' +
           '<div class="field"><label for="pw-mail">이메일</label><input class="input" id="pw-mail" name="email" type="email" autocomplete="username"></div>' +
           '<div class="field"><label for="pw-pass">비밀번호</label><input class="input" id="pw-pass" name="password" type="password" autocomplete="current-password"></div>' +
@@ -176,7 +188,7 @@ var Screens = (function () {
           '<button class="btn plain" type="button" data-act="pw-toggle">이메일 인증번호로 시작하기</button>' +
         '</form></div>';
     }
-    return '<div class="phone">' +
+    return '<div class="phone auth">' +
       brand() + head({ kicker: '시작하기', title: sent ? '인증번호를<br>입력해 주세요' : '이메일로<br>시작하기',
                        sub: sent ? e(state.otpEmail) + '(으)로 인증번호를 보냈어요.' : '처음이면 가입, 이미 가입했다면 로그인돼요.' }) +
       (sent
@@ -234,7 +246,7 @@ var Screens = (function () {
   /* ---------- 3. 수요자: 조건 등록 ---------- */
   function newRequest() {
     var repays = ['원리금균등', '원금균등', '만기일시'];
-    return '<div class="phone">' +
+    return '<div class="phone narrow">' +
       head({ back: '#/home', kicker: '조건 등록', title: '원하는 대출 조건을<br>알려주세요' }) +
       '<form class="body" data-form="request" novalidate>' +
         '<div class="grid2">' +
@@ -254,7 +266,7 @@ var Screens = (function () {
           '<span>이름과 연락처는 내가 직원을 선택하기 전까지 공개되지 않아요.</span></div>' +
         '<div class="error" id="rq-err" role="alert"></div>' +
         '<button class="btn" type="submit">조건 게시하기</button>' +
-      '</form></div>';
+      '</form>' + tabs('home', true) + '</div>';
   }
 
   /* ---------- 4. 수요자: 받은 제안 ---------- */
@@ -288,7 +300,7 @@ var Screens = (function () {
         (r.status === 'open'
           ? '<button class="btn plain small" data-act="close-request" data-id="' + r.id + '">이 조건 마감하기 (더 이상 제안 받지 않음)</button>'
           : '<div class="box white" style="text-align:center">마감된 조건이에요.</div>') +
-      '</main></div>';
+      '</main>' + tabs('home', true) + '</div>';
   }
 
   /* ---------- 5. 대화 목록 ---------- */
@@ -410,14 +422,14 @@ var Screens = (function () {
             '<input class="input" id="msg" name="text" placeholder="메시지 입력" autocomplete="off">' +
             '<button class="send" type="submit" aria-label="보내기">' + I('send', 18) + '</button>' +
           '</form>') +
-      '</div>';
+      tabs('threads', true) + '</div>';
   }
 
   /* ---------- 7. 은행 직원: 재직 인증 ---------- */
   function verify() {
     var u = Store.me(), b = u.banker;
     if (b.status === 'pending') {
-      return '<div class="phone">' + head({ navy: true, kicker: '재직 인증', title: '심사 중이에요', sub: '보통 영업일 기준 1~2일 걸려요. (예시)' }) +
+      return '<div class="phone narrow">' + head({ navy: true, kicker: '재직 인증', title: '심사 중이에요', sub: '보통 영업일 기준 1~2일 걸려요. (예시)' }) +
         '<main class="body">' +
           '<div class="card"><div class="kv"><span>소속</span><span>' + e(b.org + ' ' + b.branch) + '</span></div>' +
           '<div class="kv"><span>회사 이메일</span><span>' + e(b.email) + '</span></div>' +
@@ -428,7 +440,7 @@ var Screens = (function () {
               '<button class="btn navy" data-act="approve">시연용: 심사 승인하기</button>') +
         '</main>' + tabs('me') + '</div>';
     }
-    return '<div class="phone">' +
+    return '<div class="phone narrow">' +
       head({ navy: true, kicker: '금융사 직원 · 재직 인증', title: '인증된 직원만<br>제안할 수 있어요' }) +
       '<form class="body" data-form="verify" novalidate>' +
         (b.status === 'rejected'
@@ -503,7 +515,7 @@ var Screens = (function () {
   function propose(reqId) {
     var r = Store.request(reqId);
     if (!r) return notFound();
-    return '<div class="phone">' +
+    return '<div class="phone narrow">' +
       head({ navy: true, back: '#/board', title: '상품 역제안 작성' }) +
       '<form class="body" data-form="offer" data-req="' + r.id + '" novalidate>' +
         '<div class="card" style="gap:6px"><span class="meta">수요자 요청</span>' +
@@ -520,7 +532,7 @@ var Screens = (function () {
         '<label class="check box white"><input type="checkbox" name="notice">예상 조건이며 최종 금리·한도는 지점 심사 후 확정됨을 고지합니다. (소속사 광고 심의 기준 준수)</label>' +
         '<div class="error" id="of-err" role="alert"></div>' +
         '<button class="btn navy" type="submit">제안 보내기</button>' +
-      '</form></div>';
+      '</form>' + tabs('board', true) + '</div>';
   }
 
   /* ---------- 9-1. 수요자: 직원 제안 게시판 (내 요청에 온 제안만) ---------- */
@@ -577,7 +589,7 @@ var Screens = (function () {
   function me() {
     var u = Store.me(), isB = u.role === 'banker';
     var st = isB ? ({ none: ['warn', '미인증'], pending: ['warn', '심사 중'], verified: ['good', '인증 완료'], rejected: ['warn', '반려됨'] }[u.banker.status] || ['warn', '미인증']) : null;
-    return '<div class="phone">' + head({ navy: isB, title: '내 정보' }) +
+    return '<div class="phone narrow">' + head({ navy: isB, title: '내 정보' }) +
       '<main class="body">' +
         '<div class="card"><div class="kv"><span>이름</span><span>' + e(u.name + (u.title ? ' ' + u.title : '')) + '</span></div>' +
         '<div class="kv"><span>역할</span><span>' + (isB ? '금융사 직원' : '대출 수요자') + '</span></div>' +
@@ -644,7 +656,7 @@ var Screens = (function () {
     var x = reportTarget(kind, id);
     if (!x) return notFound();
     var me = Store.me(), already = x.targetId && Store.isBlocked(x.targetId);
-    return '<div class="phone">' + head({ back: x.back, navy: me.role === 'banker', kicker: '신고하기', title: '무엇이 문제인가요?', sub: '신고 대상: ' + e(x.what) }) +
+    return '<div class="phone narrow">' + head({ back: x.back, navy: me.role === 'banker', kicker: '신고하기', title: '무엇이 문제인가요?', sub: '신고 대상: ' + e(x.what) }) +
       '<form class="body" data-form="report" data-kind="' + kind + '" data-id="' + id + '" novalidate>' +
         '<div class="field"><span class="label" id="rp-reason-l">신고 사유</span>' + chipGroup('reason', REASONS, 'rp-reason-l') + '</div>' +
         '<div class="field"><label for="rp-detail">자세한 내용 (선택)</label><textarea class="input" id="rp-detail" name="detail" maxlength="1000" placeholder="예: 대출 전에 수수료를 먼저 보내라고 했어요."></textarea></div>' +
