@@ -1,0 +1,24 @@
+{
+  "name": "손들면",
+  "short_name": "손들면",
+  "description": "대출, 이제 은행이 먼저 찾아옵니다.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#14213D",
+  "theme_color": "#14213D",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "assets/logo/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
