@@ -243,6 +243,15 @@
     'admin-view': function (el) { state.adminView = el.dataset.val; render(); },
     'admin-go': function (el) { state.adminView = el.dataset.val; go('#/admin'); },
     'report-tab': function (el) { state.reportTab = el.dataset.val; render(); },
+    'post-tab': function (el) { state.postTab = el.dataset.val; render(); },
+    'admin-delete-request': function (el) {
+      if (!confirm('이 조건 글을 삭제할까요? 이 글에 온 제안과 대화도 모두 지워지고 되돌릴 수 없어요.')) return;
+      Store.deleteRequest(el.dataset.id); UI.toast('조건 글을 삭제했어요'); render();
+    },
+    'admin-delete-offer': function (el) {
+      if (!confirm('이 제안을 삭제할까요? 이 제안으로 열린 대화도 함께 지워지고 되돌릴 수 없어요.')) return;
+      Store.deleteOffer(el.dataset.id); UI.toast('제안을 삭제했어요'); render();
+    },
     block: function (el) {
       if (!confirm('이 사용자를 차단할까요? 서로의 조건·제안이 보이지 않고 대화를 주고받을 수 없어요. (내 정보에서 언제든 풀 수 있어요)')) return;
       Store.block(el.dataset.user); UI.toast('차단했어요'); render();

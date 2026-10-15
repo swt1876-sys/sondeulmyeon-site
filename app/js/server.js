@@ -178,6 +178,10 @@ var Server = (function () {
       case 'review':   // 운영자의 승인·반려
         return sb.from('banker_verifications').update({ status: d.status, reject_reason: d.reason || '', reviewed_at: new Date().toISOString() })
           .eq('user_id', d.userId).then(check);
+      case 'deleteRequest':   // 운영자: 조건 글 삭제 (제안·대화는 서버에서 연쇄 삭제)
+        return sb.from('requests').delete().eq('id', d.id).then(check);
+      case 'deleteOffer':     // 운영자: 제안 삭제
+        return sb.from('offers').delete().eq('id', d.id).then(check);
       case 'block':
         return sb.from('blocks').insert({ blocker_id: uid, blocked_id: d.blocked }).then(check);
       case 'unblock':

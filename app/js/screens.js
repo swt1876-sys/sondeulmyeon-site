@@ -683,13 +683,14 @@ var Screens = (function () {
   function adminSwitch(view) {
     var nV = adminPending(), nR = openReports();
     return '<div class="chips" role="group" aria-label="운영자 메뉴">' +
-      [['verif', '재직 인증 심사' + (nV ? ' ' + nV : '')], ['reports', '신고 처리' + (nR ? ' ' + nR : '')]].map(function (x) {
+      [['verif', '재직 인증 심사' + (nV ? ' ' + nV : '')], ['reports', '신고 처리' + (nR ? ' ' + nR : '')], ['posts', '게시물 관리']].map(function (x) {
         var on = view === x[0];
         return '<button class="chip' + (on ? ' on' : '') + '" data-act="admin-view" data-val="' + x[0] + '" aria-pressed="' + on + '">' + x[1] + '</button>';
       }).join('') + '</div>';
   }
   function admin(state) {
     if (state.adminView === 'reports') return adminReports(state);
+    if (state.adminView === 'posts') return adminPosts(state);
     var tab = state.adminTab || 'pending';
     var all = Store.verifications();
     var n = { pending: 0, verified: 0, rejected: 0 };
@@ -758,6 +759,8 @@ var Screens = (function () {
       var tools = [];
       if (r.status === 'open') {
         if (req && req.status === 'open') tools.push('<button class="btn small plain" data-act="admin-close-request" data-id="' + req.id + '">조건 글 내리기</button>');
+        if (req) tools.push('<button class="btn small plain" style="color:var(--bad)" data-act="admin-delete-request" data-id="' + req.id + '">조건 글 삭제</button>');
+        if (r.kind === 'offer' && Store.offer(r.refId)) tools.push('<button class="btn small plain" style="color:var(--bad)" data-act="admin-delete-offer" data-id="' + r.refId + '">제안 삭제</button>');
         if (target && target.role === 'banker' && target.banker && target.banker.status === 'verified')
           tools.push('<button class="btn small plain" data-act="admin-revoke" data-id="' + target.id + '">재직 인증 취소</button>');
         tools.push('<button class="btn small navy" data-act="admin-resolve" data-id="' + r.id + '">처리 완료</button>');
@@ -783,6 +786,37 @@ var Screens = (function () {
     return '<div class="phone">' + head({ back: '#/me', kicker: '운영자', title: '신고 처리', sub: '내용을 확인하고 글 내리기·인증 취소 등 조치한 뒤 처리 완료를 눌러요.' }) +
       '<main class="body">' + adminSwitch('reports') + filter + cards +
         '<div class="box info">사기·선입금 요구는 바로 조치하고, 필요하면 상대 계정을 Supabase → Authentication → Users에서 삭제해 이용을 막을 수 있어요.</div>' +
+      '</main>' + tabs('me') + '</div>';
+  }
+
+  /* ---------- 12-2. 운영자: 게시물 관리 (모든 조건 글 보기·내리기·삭제) ---------- */
+  function adminPosts(state) {
+    var tab = state.postTab || 'open', all = Store.allRequests();
+    var n = { open: 0, closed: 0 }; all.forEach(function (r) { n[r.status] = (n[r.status] || 0) + 1; });
+    var list = all.filter(function (r) { return r.status === tab; });
+    var filter = '<div class="chips" role="group" aria-label="게시 상태">' + [['open', '게시 중'], ['closed', '마감']].map(function (x) {
+      var on = tab === x[0];
+      return '<button class="chip' + (on ? ' on' : '') + '" data-act="post-tab" data-val="' + x[0] + '" aria-pressed="' + on + '">' + x[1] + ' ' + (n[x[0]] || 0) + '</button>';
+    }).join('') + '</div>';
+    var cards = list.length ? list.map(function (r) {
+      var owner = Store.user(r.userId), offers = Store.offersFor(r.id);
+      return '<article class="card">' +
+        '<div class="card-top"><span class="meta">' + e(owner ? owner.name + ' (수요자)' : '(알 수 없음)') + ' · ' + UI.ago(r.createdAt) + '</span>' +
+          '<span class="meta">제안 ' + offers.length + '건</span></div>' +
+        '<div class="title">' + e(r.purpose) + ' ' + UI.won(r.amount) + ' · ' + r.term + '개월</div>' + requestTags(r, true) +
+        (offers.length ? '<div class="box white" style="font-size:12.5px;display:flex;flex-direction:column;gap:6px">' + offers.map(function (o) {
+            var b = Store.user(o.bankerId);
+            return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>' + e((b ? UI.bankerLabel(b) : '직원') + ' · ' + o.product + ' · ' + o.rate) + '</span>' +
+              '<button class="btn small plain" style="min-height:32px;width:auto;padding:0 10px;font-size:12px;color:var(--bad)" data-act="admin-delete-offer" data-id="' + o.id + '">제안 삭제</button></div>';
+          }).join('') + '</div>' : '') +
+        '<div class="row">' +
+          (r.status === 'open' ? '<button class="btn small plain" data-act="admin-close-request" data-id="' + r.id + '">내리기(마감)</button>' : '') +
+          '<button class="btn small plain" style="color:var(--bad)" data-act="admin-delete-request" data-id="' + r.id + '">삭제</button>' +
+        '</div></article>';
+    }).join('') : '<div class="empty">' + (tab === 'open' ? '게시 중인 조건 글이 없어요.' : '마감된 조건 글이 없어요.') + '</div>';
+    return '<div class="phone">' + head({ back: '#/me', kicker: '운영자', title: '게시물 관리', sub: '모든 조건 글과 제안을 보고, 문제가 있으면 내리거나 삭제해요.' }) +
+      '<main class="body">' + adminSwitch('posts') + filter + cards +
+        '<div class="box info">내리기(마감)는 글을 남겨 두고 게시판에서만 빼요. 삭제는 그 글에 온 제안과 대화까지 모두 지워지고 되돌릴 수 없어요.</div>' +
       '</main>' + tabs('me') + '</div>';
   }
 

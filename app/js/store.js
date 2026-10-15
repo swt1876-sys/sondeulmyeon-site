@@ -138,6 +138,25 @@ var Store = (function () {
   function myRequests(userId) { return db.requests.filter(function (r) { return r.userId === userId; }); }
   function openRequests() { return db.requests.filter(function (r) { return r.status === 'open'; }); }
   function closeRequest(id) { request(id).status = 'closed'; save(); push('closeRequest', request(id)); }
+  /* 운영자: 조건 글 삭제 (그 글에 온 제안·대화·메시지도 함께 지워짐) */
+  function deleteRequest(id) {
+    var offerIds = db.offers.filter(function (o) { return o.requestId === id; }).map(function (o) { return o.id; });
+    var threadIds = db.threads.filter(function (t) { return t.requestId === id; }).map(function (t) { return t.id; });
+    db.messages = db.messages.filter(function (m) { return threadIds.indexOf(m.threadId) === -1; });
+    db.threads = db.threads.filter(function (t) { return t.requestId !== id; });
+    db.offers = db.offers.filter(function (o) { return offerIds.indexOf(o.id) === -1; });
+    db.requests = db.requests.filter(function (r) { return r.id !== id; });
+    save(); push('deleteRequest', { id: id });
+  }
+  /* 운영자: 제안 삭제 (그 제안으로 열린 대화도 함께 지워짐) */
+  function deleteOffer(id) {
+    var threadIds = db.threads.filter(function (t) { return t.offerId === id; }).map(function (t) { return t.id; });
+    db.messages = db.messages.filter(function (m) { return threadIds.indexOf(m.threadId) === -1; });
+    db.threads = db.threads.filter(function (t) { return t.offerId !== id; });
+    db.offers = db.offers.filter(function (o) { return o.id !== id; });
+    save(); push('deleteOffer', { id: id });
+  }
+  function allRequests() { return db.requests.slice().sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; }); }
 
   /* ---------- 제안(은행 직원의 역제안) ---------- */
   function createOffer(bankerId, requestId, d) {
@@ -308,6 +327,7 @@ var Store = (function () {
   load();
 
   return {
+    deleteRequest: deleteRequest, deleteOffer: deleteOffer, allRequests: allRequests,
     block: block, unblock: unblock, isBlocked: isBlocked, blockedWith: blockedWith, blockedUsers: blockedUsers, threadBlocked: threadBlocked,
     report: report, reports: reports, resolveReport: resolveReport,
     isAdmin: isAdmin, verifications: verifications, reviewVerification: reviewVerification,
