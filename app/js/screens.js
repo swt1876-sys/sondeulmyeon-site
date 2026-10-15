@@ -174,14 +174,17 @@ var Screens = (function () {
       '</form></div>';
   }
 
+  /* 지난번 로그인한 이메일 (이 기기에만 저장, 편의용) */
+  function lastEmail() { try { return localStorage.getItem('sondeul-last-email') || ''; } catch (x) { return ''; } }
+
   /* ---------- 1-0. 서버 모드: 이메일로 시작하기 (6자리 인증번호) ---------- */
   function emailLogin(state) {
     var sent = !!state.otpEmail;
-    // 스토어 심사용: 운영자가 만든 심사 계정만 비밀번호로 로그인 (일반 이용자는 쓰지 않음)
+    // 비밀번호 로그인: 운영자와 심사용 계정처럼, Supabase에서 비밀번호를 정해 둔 계정만 (일반 이용자는 이메일 인증번호)
     if (state.pwLogin) {
-      return '<div class="phone auth">' + brand() + head({ kicker: '심사용 로그인', title: '심사 계정으로<br>로그인', sub: '앱 심사를 위해 운영자가 발급한 계정 전용이에요.' }) +
+      return '<div class="phone auth">' + brand() + head({ kicker: '비밀번호 로그인', title: '비밀번호로<br>로그인', sub: '운영자·심사용처럼 비밀번호를 설정한 계정 전용이에요.' }) +
         '<form class="body" data-form="pw-login" novalidate>' +
-          '<div class="field"><label for="pw-mail">이메일</label><input class="input" id="pw-mail" name="email" type="email" autocomplete="username"></div>' +
+          '<div class="field"><label for="pw-mail">이메일</label><input class="input" id="pw-mail" name="email" type="email" autocomplete="username" value="' + e(lastEmail()) + '"></div>' +
           '<div class="field"><label for="pw-pass">비밀번호</label><input class="input" id="pw-pass" name="password" type="password" autocomplete="current-password"></div>' +
           '<div class="error" id="otp-err" role="alert"></div>' +
           '<button class="btn" type="submit">로그인</button>' +
@@ -202,11 +205,11 @@ var Screens = (function () {
           '</form>'
         : '<form class="body" data-form="otp-send" novalidate>' +
             '<div class="field"><label for="otp-mail">이메일</label>' +
-              '<input class="input" id="otp-mail" name="email" type="email" autocomplete="email" placeholder="name@example.com"></div>' +
+              '<input class="input" id="otp-mail" name="email" type="email" autocomplete="email" placeholder="name@example.com" value="' + e(lastEmail()) + '"></div>' +
             '<div class="hint">금융사 직원은 <b>회사 이메일</b>로 시작하면 재직 인증이 빨라요.</div>' +
             '<div class="error" id="otp-err" role="alert"></div>' +
             '<button class="btn" type="submit">인증번호 받기</button>' +
-            '<button type="button" data-act="pw-toggle" style="background:none;border:0;color:var(--ink-3, #6A7184);font-size:12px;text-decoration:underline;cursor:pointer;align-self:center">심사용 계정 로그인</button>' +
+            '<button type="button" data-act="pw-toggle" style="background:none;border:0;color:var(--ink-3, #6A7184);font-size:12px;text-decoration:underline;cursor:pointer;align-self:center">비밀번호로 로그인 (운영자·심사용)</button>' +
           '</form>') +
       '<p class="notice" style="padding:0 20px 24px">손들면은 대출을 취급하지 않으며, 계약은 해당 금융사 지점에서 체결됩니다.</p>' +
       '</div>';

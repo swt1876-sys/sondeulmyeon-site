@@ -214,7 +214,7 @@ var Server = (function () {
   function verifyCode(addr, code) {
     return sb.auth.verifyOtp({ email: addr, token: code, type: 'email' }).then(check);
   }
-  /* 스토어 심사용 계정 로그인 (운영자가 Supabase에서 비밀번호로 만든 계정만) */
+  /* 비밀번호 로그인 (운영자·심사용처럼 Supabase에서 비밀번호를 정해 둔 계정만) */
   function signInPassword(addr, pw) {
     return sb.auth.signInWithPassword({ email: addr, password: pw }).then(check);
   }
@@ -246,7 +246,9 @@ var Server = (function () {
       throw new Error('서버 연결 도구(supabase-js)를 내려받지 못했어요. 인터넷 연결을 확인해 주세요. ' +
                       '회사 PC라면 보안 프로그램이 cdn.jsdelivr.net을 막고 있을 수 있어요(개인 PC나 휴대폰으로 시도해 보세요).');
     }
-    sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
+    // 로그인 상태를 이 기기에 저장해 두고(persistSession), 만료 전에 자동으로 연장(autoRefreshToken)
+    sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY,
+      { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
     Store.attachRemote(deliver);
     Store.replaceAll(emptyDb());
     sb.auth.onAuthStateChange(function (event, s) {

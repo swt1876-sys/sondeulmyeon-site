@@ -171,6 +171,7 @@
     if (el) el.textContent = msg;
     return false;
   }
+  function rememberEmail(v) { try { localStorage.setItem('sondeul-last-email', v); } catch (x) { /* 저장 불가해도 괜찮음 */ } }
   function posInt(v) { var n = Number(String(v).replace(/,/g, '')); return Number.isInteger(n) && n > 0 ? n : null; }
 
   /* ---------- 액션: 버튼을 누르면 할 일 ---------- */
@@ -298,6 +299,7 @@
       if (!d.email || !d.password) return showError('otp-err', '이메일과 비밀번호를 입력해 주세요.');
       var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
       Server.signInPassword(d.email.trim(), d.password).then(function () {
+        rememberEmail(d.email.trim());
         state.pwLogin = false; UI.toast('로그인했어요');
       }).catch(function () { btn.disabled = false; showError('otp-err', '이메일 또는 비밀번호가 맞지 않아요.'); });
     },
@@ -307,6 +309,7 @@
       if (!/^\d{6,10}$/.test(d.code)) return showError('otp-err', '메일로 받은 숫자를 그대로 입력해 주세요.');
       var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
       Server.verifyCode(state.otpEmail, d.code).then(function () {
+        rememberEmail(state.otpEmail);
         UI.toast('인증됐어요');   // 로그인 상태가 바뀌면 server.js가 내용을 불러와 화면을 다시 그려요
       }).catch(function () {
         btn.disabled = false; showError('otp-err', '번호가 맞지 않거나 시간이 지났어요. 다시 확인해 주세요.');
