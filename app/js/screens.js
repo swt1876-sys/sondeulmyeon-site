@@ -239,9 +239,11 @@ var Screens = (function () {
         requestTags(r) + '</button>';
     }).join('') : '<div class="empty">아직 올린 조건이 없어요.<br>원하는 대출 조건을 올려 보세요.</div>';
     return '<div class="phone">' +
-      head({ kicker: '대출 수요자', title: e(u.name) + '님, 안녕하세요', sub: '올린 조건과 받은 제안을 확인하세요.' }) +
+      head({ kicker: Store.isAdmin() ? '관리자' : '대출 수요자', title: e(u.name) + '님, 안녕하세요', sub: '올린 조건과 받은 제안을 확인하세요.' }) +
       '<main class="body">' +
         '<button class="btn" data-act="go" data-to="#/request/new" style="display:flex;align-items:center;justify-content:center;gap:6px">' + I('plus', 20) + '새 조건 올리기</button>' +
+        (Store.isAdmin() ? '<button class="btn navy" data-act="go" data-to="#/admin">관리자 화면 (인증 심사 · 신고 처리)' +
+          (adminPending() + openReports() ? ' · 대기 ' + (adminPending() + openReports()) + '건' : '') + '</button>' : '') +
         cards +
       '</main>' + tabs('home') + '</div>';
   }
@@ -561,7 +563,7 @@ var Screens = (function () {
         '</article>';
     }).join('') : '<div class="empty">아직 받은 제안이 없어요.</div>';
     return '<div class="phone">' +
-      head({ kicker: '대출 수요자', title: '직원 제안 게시판', sub: '내 요청에 온 제안만 보여요.' }) +
+      head({ kicker: Store.isAdmin() ? '관리자' : '대출 수요자', title: '직원 제안 게시판', sub: '내 요청에 온 제안만 보여요.' }) +
       '<div style="background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;flex-direction:column;gap:6px">' +
         '<span class="title" style="font-size:14px">내 요청에 온 제안 ' + all.length + '건</span>' +
         '<label for="of-req" class="sr">내 요청</label><select id="of-req" class="input" data-change="offers-req" style="height:40px;font-size:14px">' +
@@ -595,7 +597,7 @@ var Screens = (function () {
     return '<div class="phone narrow">' + head({ navy: isB, title: '내 정보' }) +
       '<main class="body">' +
         '<div class="card"><div class="kv"><span>이름</span><span>' + e(u.name + (u.title ? ' ' + u.title : '')) + '</span></div>' +
-        '<div class="kv"><span>역할</span><span>' + (isB ? '금융사 직원' : '대출 수요자') + '</span></div>' +
+        '<div class="kv"><span>역할</span><span>' + (Store.isAdmin() ? '관리자' : isB ? '금융사 직원' : '대출 수요자') + '</span></div>' +
         (u.phone ? '<div class="kv"><span>휴대폰</span><span>' + e(u.phone) + '</span></div>' : '') +
         (isB ? '<div class="kv"><span>소속</span><span>' + e((u.banker.org || '-') + ' ' + (u.banker.branch || '')) + '</span></div>' +
                '<div class="kv"><span>재직 인증</span><span class="badge ' + st[0] + '">' + st[1] + '</span></div>' : '') +
